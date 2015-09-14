@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Servlets-Study" default="help" basedir=".">
+	<property file="build.properties" />
+
+	<record name="ant.log" action="start" append="true" />
+	
+	<property name="web-inf.dir" value="WEB-INF"/>
+	<property name="src" value="src"/>
+	<property name="build" value="build"/>
+	<property name="dist" value="dist"/>
+	<property name="classes" value="classes"/>
+	<property name="lib" value="lib"/>
+	
+	<target name="help" description="This task lists out all the tasks this build script provides">
+		<echo message="The available ANT Tasks are: "/>
+		<echo message="1. clean	:	This task will delete the 'build' and 'dist' directories"/>
+		<echo message="2. compile	:	This task will compile the Java source code and place it in 'build/classes' directory"/>
+		<echo message="3. war		:	This task will create a WAR file for this web application and place it inside 'dist' directory"/>
+		<echo message="4. deploy	:	This task will deploy the WAR file to tomcat server"/>
+	</target>
+	
+	<tstamp prefix="build-info">
+		<format property="current-date" pattern="d-MMMM-yyyy" locale="en" />
+		<format property="current-time" pattern="hh:mm:ss a z" locale="en" />
+		<format property="year-month-day" pattern="yyyy-MM-dd" locale="en" />
+	</tstamp>
+		
+	<path id="compile.classpath">
+		<fileset dir="${web-inf.dir}/${lib}">
+			<include name="*.jar"/>
+		</fileset>
+	</path>
+	
+	<target name="clean" description="This task deletes the 'build' and 'dist' directories">
+		<echo message="Project name is: ${project-name}"/>
+		<delete dir="${build}"/>
+		<delete dir="${dist}"/>
+	</target>
+	
+	<target name="init" depends="clean" description="This task creates the 'build' and 'dist' directories">
+		<mkdir dir="${build}/${classes}"/>
+		<mkdir dir="${dist}"/>
+	</target>
+	
+	<target name="compile" depends="init" description="This task compiles the Java source code and places it in 'build/classes' directory">
+		<javac destdir="${build}/${classes}" srcdir="${src}" debug="true" includeantruntime="false">
+			<classpath refid="compile.classpath"/>
+		</javac>
+	</target>
+	
+	<target name="war" depends="compile" description="This task creates WAR file and places it inside 'dist' directory">
+		<war destfile="${dist}/${project-name}.war" webxml="${web-inf.dir}/web.xml">
+			<lib dir="WEB-INF/lib"/>
+			<classes dir="build/classes"/>
+			<!-- Include the static files such as Images, HTML and JSP files in the WAR & Exclude 'src'/'build' directories and log files -->
+			<fileset dir=".">
+				<include name="**/*.*"/>
+				<exclude name="${src}/"/>
+				<exclude name="${build}/"/>
+				<exclude name="**/*.log"/>
+            </fileset>
+			<!-- Add meta data details -->
+			<manifest>
+				<attribute name="Built-By" value="Neeraj" />
+				<attribute name="Built-On" value="${build-info.current-date}" />
+				<attribute name="Built-At" value="${build-info.current-time}" />
+			</manifest>
+		</war>
+	</target>
+	
+	<target name='deploy' depends='war' description='This task copies the WAR file to the Application / Web Server'>
+		<copy todir='D:\Tools\Apache-Tomcat-7.0\webapps' file='${dist}/${project-name}.war'/>
+	</target>
+	
+	<target name="deploy-complete">
+		<mail mailhost="smtp.gmail.com" mailport="465" ssl="true" 
+			  user="ngirolkar" password="REDACTED" from="ngirolkar@gmail.com"
+		      tolist="neeraj191987@gmail.com"
+		      subject="WAR was deployed to the server"
+		      message="The WAR file was deployed to Tomcat"/>
+	</target>
+	
+</project>
